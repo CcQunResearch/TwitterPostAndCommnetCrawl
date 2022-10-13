@@ -11,6 +11,11 @@ import json
 from utils import write_tweet
 
 data_dir = 'Data'
-filenames = os.listdir(data_dir)
 
-write_tweet(filenames,'filenames.json')
+old_filenames = set(json.load(open('filenames.json', 'r', encoding='utf-8')))
+
+now_filenames = set(os.listdir(data_dir))
+
+new_filenames = list(old_filenames | now_filenames)
+
+write_tweet(new_filenames, 'filenames.json')
