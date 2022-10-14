@@ -148,15 +148,15 @@ def wait_reply(*args):
 
 
 def wait_new_reply(*args):
-    check_have_smr_button = finds(driver, locator.show_more_replies_button)
-    if len(check_have_smr_button) > 0:
-        driver.execute_script("arguments[0].click();", check_have_smr_button[0])
-    check_have_sor_button = finds(driver, locator.show_offensive_reply_button)
-    if len(check_have_sor_button) > 0:
-        driver.execute_script("arguments[0].click();", check_have_sor_button[0])
-    # time.sleep(0.2)
-    tweet_articles = finds(args[0], locator.tweet_article)
     try:
+        check_have_smr_button = finds(driver, locator.show_more_replies_button)
+        if len(check_have_smr_button) > 0:
+            driver.execute_script("arguments[0].click();", check_have_smr_button[0])
+        check_have_sor_button = finds(driver, locator.show_offensive_reply_button)
+        if len(check_have_sor_button) > 0:
+            driver.execute_script("arguments[0].click();", check_have_sor_button[0])
+        # time.sleep(0.2)
+        tweet_articles = finds(args[0], locator.tweet_article)
         tid_set = get_articles_tid_set(tweet_articles)
     except StaleElementReferenceException:
         return False
@@ -317,7 +317,7 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
         except TimeoutException:
             if level == 1:
                 no_new_time += 1
-                if no_new_time > 1:
+                if no_new_time > 0:
                     # print(TimeoutException)
                     # print('breaking!!!!!!!!!!')
                     break
@@ -429,6 +429,7 @@ if __name__ == '__main__':
                         save_standard_json(tweet, os.path.join(data_dir, f'{tweet["source"]["tweet id"]}.json'))
                         print(f'{tweet["source"]["tweet id"]}.json')
         except Exception:
+            print('exception')
             continue
 
     # # tweet = crawl_tweet(driver, 'https://twitter.com/MetsAvenue/status/1579464324313382913', 415)
