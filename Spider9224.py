@@ -377,10 +377,19 @@ if __name__ == '__main__':
                         print('pass')
                         continue
 
+                    crawling_path = os.path.join('Crawling', tidjson)
+                    if os.path.exists(crawling_path):
+                        continue
+                    write_tweet({}, crawling_path)
+
                     tweet = crawl_tweet(driver, tweet_url[0], tweet_url[1])
                     if len(tweet["comment"]) > 10:
                         save_standard_json(tweet, os.path.join(data_dir, f'{tweet["source"]["tweet id"]}.json'))
                         print(f'{tweet["source"]["tweet id"]}.json')
+
+                    os.remove(crawling_path)
             except Exception:
                 print('exception')
+                if os.path.exists(crawling_path):
+                    os.remove(crawling_path)
                 continue
