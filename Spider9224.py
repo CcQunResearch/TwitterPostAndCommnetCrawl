@@ -33,8 +33,6 @@ twitter_login_url = 'https://twitter.com/'
 twitter_home_url = 'https://twitter.com/home'
 
 
-# global_tid_set = set()
-
 class Xpath():
     def __init__(self):
         # 登录
@@ -57,8 +55,6 @@ class Xpath():
 
         self.sub_line = './/div[@class="css-1dbjc4n r-1awozwy r-1hwvwag r-18kxxzh r-1b7u577"]/div'  # 表示回复关系的竖线
         self.unfold_thread_button = './/a[@class="css-4rbku5 css-18t94o4 css-1dbjc4n r-1loqt21 r-t2kpel r-1ny4l3l r-1udh08x r-ymttw5 r-1vvnge1 r-o7ynqc r-6416eg"]'  # "Show this thread"按钮
-        # self.unfold_reply_button = './/div[@class="css-1dbjc4n r-1iusvr4 r-16y2uox"]'
-        # self.reply_button = '//div[@role="button" and @class="css-18t94o4 css-1dbjc4n r-16y2uox r-19u6a5r r-1ny4l3l r-m2pi6t r-o7ynqc r-6416eg"]'
 
 
 locator = Xpath()
@@ -113,26 +109,7 @@ def login():
 def next_is_sub(tweet_article):
     sub_line = tweet_article.find_elements_by_xpath(locator.sub_line)
     unfold_thread_button = tweet_article.find_elements_by_xpath(locator.unfold_thread_button)
-    # print()
-    # print('len(sub_line)', len(sub_line))
-    # print('len(unfold_thread_button)', len(unfold_thread_button))
-    # print(len(sub_line) == 2 and len(unfold_thread_button) == 0)
     return len(sub_line) == 2 and len(unfold_thread_button) == 0
-
-
-# # 检查article下面的article是不是一个回复, 如果是则返回true (tweet页面)
-# def next_is_sub_reply(tweet_article):
-#     sub_line = tweet_article.find_elements_by_xpath(locator.sub_line)
-#     # unfold_reply_button = tweet_article.find_elements_by_xpath(locator.unfold_reply_button)
-#     print()
-#     if len(tweet_article.find_elements_by_xpath(locator.tweet_text)) != 0:
-#         print('text', tweet_article.find_element_by_xpath(locator.tweet_text).get_attribute('innerText'))
-#     else:
-#         print('text', '#############################')
-#     print('len(sub_line)', len(sub_line))
-#     # print('len(unfold_reply_button)', len(unfold_reply_button))
-#     print(len(sub_line) == 2)
-#     return len(sub_line) == 2
 
 
 def wait_reply(*args):
@@ -148,29 +125,20 @@ def wait_reply(*args):
 
 
 def wait_new_reply(*args):
-    check_have_smr_button = finds(driver, locator.show_more_replies_button)
-    if len(check_have_smr_button) > 0:
-        driver.execute_script("arguments[0].click();", check_have_smr_button[0])
-    check_have_sor_button = finds(driver, locator.show_offensive_reply_button)
-    if len(check_have_sor_button) > 0:
-        driver.execute_script("arguments[0].click();", check_have_sor_button[0])
-    # time.sleep(0.2)
-    tweet_articles = finds(args[0], locator.tweet_article)
     try:
+        check_have_smr_button = finds(driver, locator.show_more_replies_button)
+        if len(check_have_smr_button) > 0:
+            driver.execute_script("arguments[0].click();", check_have_smr_button[0])
+        check_have_sor_button = finds(driver, locator.show_offensive_reply_button)
+        if len(check_have_sor_button) > 0:
+            driver.execute_script("arguments[0].click();", check_have_sor_button[0])
+        # time.sleep(0.2)
+        tweet_articles = finds(args[0], locator.tweet_article)
         tid_set = get_articles_tid_set(tweet_articles)
     except StaleElementReferenceException:
         return False
     return not tid_set.issubset(global_tid_set)
 
-
-# def click_show_more_replies_button(driver):
-#     try:
-#         WebDriverWait(driver, 2).until(lambda driver: finds(driver, locator.show_more_replies_button))
-#     except Exception:
-#         pass
-#     check_have = finds(driver, locator.show_more_replies_button)
-#     if len(check_have) > 0:
-#         driver.execute_script("arguments[0].click();", check_have[0])
 
 def scrolling(driver, location):
     js = f"var q=document.documentElement.scrollTop={location}"
@@ -256,12 +224,6 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
     except Exception:
         pass
 
-    # click_show_more_replies_button(driver)
-    # try:
-    #     WebDriverWait(driver, 10).until(wait_reply)
-    # except Exception:
-    #     click_show_more_replies_button(driver)
-
     source_article = find(driver, locator.source_article)
     source_timestr = source_article.find_element_by_xpath(locator.time).get_attribute('datetime')
     source = {
@@ -272,7 +234,6 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
         "user id": tweet_url.split('/')[-3],
         "tweet id": tweet_url.split('/')[-1]
     }
-    # print(source)
 
     tweet_articles = finds(driver, locator.tweet_article)
 
@@ -286,7 +247,6 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
         if tweet_article.get_attribute('tabindex') == "-1":
             source_index = i
             break
-    # print('source_index', source_index)
     if source_index + 1 < len(tweet_articles):
         tweet_articles = tweet_articles[source_index + 1:]
     else:
@@ -315,7 +275,7 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
         except TimeoutException:
             if level == 1:
                 no_new_time += 1
-                if no_new_time > 1:
+                if no_new_time > 0:
                     # print(TimeoutException)
                     # print('breaking!!!!!!!!!!')
                     break
@@ -323,13 +283,11 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
                 break
 
         now_tweet_articles = finds(driver, locator.tweet_article)
-        # now_tid_set = set([tweet_article.find_element_by_xpath(locator.tweet_url_place).get_attribute('href').split('/')[-1] for tweet_article in now_tweet_articles])
         for tweet_article in now_tweet_articles:
             tweet_url_places = tweet_article.find_elements_by_xpath(locator.tweet_url_place)
             if len(tweet_url_places) > 0:
                 tid = tweet_url_places[0].get_attribute('href').split('/')[-1]
                 if tid not in global_tid_set:
-                    # tweet_articles.append(tweet_article)
                     global_tid_set.add(tid)
 
                     comment = get_comment(tweet_article, temp_comment_id, source["user id"], source["tweet id"], level)
@@ -339,9 +297,6 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
 
     global_tid_set = set()
     no_new_time = 0
-
-    # tweet_articles = finds(driver, locator.tweet_article)
-    # print('len(tweet_articles) 1:', len(tweet_articles))
 
     if level < level_limit:
         for comment in comments:
@@ -358,7 +313,6 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
             temp_comment_id += 1
 
             if children:
-                # print('len(comment["children"])', len(comment["children"]))
                 for sub_comment in children:
                     sub_comment["level"] = level
                     sub_comment["temp comment id"] = temp_comment_id
@@ -411,8 +365,11 @@ if __name__ == '__main__':
     while 1:
         try:
             tweet_urls = get_source_twitter_urls(driver)
+        except Exception:
+            continue
 
-            for tweet_url in tweet_urls:
+        for tweet_url in tweet_urls:
+            try:
                 if tweet_url[1] > 10:
                     print(tweet_url)
                     tidjson = tweet_url[0].split('/')[-1] + '.json'
@@ -421,21 +378,9 @@ if __name__ == '__main__':
                         continue
 
                     tweet = crawl_tweet(driver, tweet_url[0], tweet_url[1])
-                    # tweet = crawl_tweet(driver, 'https://twitter.com/niicolegats/status/1579927631210106881', 17)
-                    # write_tweet(tweet, 'test.json')
                     if len(tweet["comment"]) > 10:
                         save_standard_json(tweet, os.path.join(data_dir, f'{tweet["source"]["tweet id"]}.json'))
                         print(f'{tweet["source"]["tweet id"]}.json')
-        except Exception:
-            continue
-
-    # # tweet = crawl_tweet(driver, 'https://twitter.com/MetsAvenue/status/1579464324313382913', 415)
-    # tweet = crawl_tweet(driver, 'https://twitter.com/GiraffeNeckMarc/status/1580009291138101248', 15)
-    # save_standard_json(tweet, os.path.join('Data', f'{tweet["source"]["tweet id"]}.json'))
-    #
-    # # tweet2 = crawl_tweet(driver, 'https://twitter.com/MSL20174/status/1579667623557890048')
-    #
-    # print(json.dumps(tweet, indent=4, ensure_ascii=False))
-    # write_tweet(tweet, 'test.json')
-    # print()
-    # # print(tweet2)
+            except Exception:
+                print('exception')
+                continue
