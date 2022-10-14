@@ -161,7 +161,7 @@ def get_article_url(tweet_article):
 def get_comment(tweet_article, temp_comment_id, source_uid, source_tid, level):
     parent_user_ids = tweet_article.find_elements_by_xpath(locator.parent_user_id)
     reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
-    reply_num = int(reply_num_str) if len(reply_num_str) > 0 else 0
+    reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
     tweet_texts = tweet_article.find_elements_by_xpath(locator.tweet_text)
     if len(parent_user_ids) > 0 and parent_user_ids[0].get_attribute(
             'innerText') == f'@{source_uid}' and len(tweet_texts) > 0:
@@ -379,6 +379,7 @@ if __name__ == '__main__':
 
                     crawling_path = os.path.join('Crawling', tidjson)
                     if os.path.exists(crawling_path):
+                        print('repetition')
                         continue
                     write_tweet({}, crawling_path)
 
