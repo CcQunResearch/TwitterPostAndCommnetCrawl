@@ -30,7 +30,7 @@ reply_num_limit = 400  # 截取的一级评论限制数量
 driver_path = r'C:\Program Files\Google\Chrome\Application\chromedriver.exe'
 
 twitter_login_url = 'https://twitter.com/'
-twitter_home_url = 'https://twitter.com/home'
+
 
 
 class Xpath():
@@ -326,6 +326,7 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
 
 def save_standard_json(tweet, filepath):
     source = tweet["source"]
+    source["theme"] = topic
     source_tid = source["tweet id"]
     comments = tweet["comment"]
     tid_2_index = {}
@@ -360,6 +361,8 @@ if __name__ == '__main__':
     driver = login()
 
     data_dir = 'Data'
+    topic = 'London'
+    twitter_home_url = 'https://twitter.com/search?q=London&src=trend_click&vertical=trends'
 
     filenames = json.load(open('filenames.json', 'r', encoding='utf-8'))
     while 1:
