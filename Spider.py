@@ -369,8 +369,8 @@ if __name__ == '__main__':
     driver = login()
 
     data_dir = 'Data'
-    topic = 'Covid'
-    twitter_home_url = 'https://twitter.com/search?q=Covid&src=trend_click&vertical=trends'
+    topic = 'No theme'
+    twitter_home_url = 'https://twitter.com/home'
 
     filenames = json.load(open('filenames.json', 'r', encoding='utf-8'))
     while 1:
