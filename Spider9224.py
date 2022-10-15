@@ -196,7 +196,12 @@ def get_source_twitter_urls(driver):
     WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.tweet_place))
 
     scrolling_location = 0
+    loop_num = 0
     while 1:
+        if loop_num > 100:
+            break
+        loop_num += 1
+
         tweet_articles = finds(driver, locator.tweet_article)
 
         drop_next = False
