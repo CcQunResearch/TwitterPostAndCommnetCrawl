@@ -32,7 +32,6 @@ driver_path = r'C:\Program Files\Google\Chrome\Application\chromedriver.exe'
 twitter_login_url = 'https://twitter.com/'
 
 
-
 class Xpath():
     def __init__(self):
         # 登录
@@ -190,26 +189,35 @@ def get_comment(tweet_article, temp_comment_id, source_uid, source_tid, level):
 
 
 def get_source_twitter_urls(driver):
-    tweet_urls = []
+    tweet_urls = set()
 
     driver.get(twitter_home_url)
     WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.tweet_place))
 
-    tweet_articles = finds(driver, locator.tweet_article)
+    scrolling_location = 0
+    while 1:
+        tweet_articles = finds(driver, locator.tweet_article)
 
-    drop_next = False
-    for tweet_article in tweet_articles:
-        if drop_next:
-            if not next_is_sub(tweet_article):
-                drop_next = False
-            continue
-        if next_is_sub(tweet_article):
-            drop_next = True
+        drop_next = False
+        for tweet_article in tweet_articles:
+            if drop_next:
+                if not next_is_sub(tweet_article):
+                    drop_next = False
+                continue
+            if next_is_sub(tweet_article):
+                drop_next = True
 
-        reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
-        reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
-        tweet_urls.append(
-            (tweet_article.find_element_by_xpath(locator.tweet_url_place).get_attribute('href'), reply_num))
+            reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
+            reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
+            tweet_urls.add(
+                (tweet_article.find_element_by_xpath(locator.tweet_url_place).get_attribute('href'), reply_num))
+
+        if len(tweet_urls) > 50:
+            break
+
+        scrolling_location += 1200
+        scrolling(driver, scrolling_location)
+        time.sleep(1)
 
     return tweet_urls
 
