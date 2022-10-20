@@ -6,7 +6,7 @@
 # @Software: PyCharm
 # @Note    :
 import json
-
+import requests
 from utils import write_tweet
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,6 +30,9 @@ reply_num_limit = 400  # 截取的一级评论限制数量
 driver_path = r'C:\Program Files\Google\Chrome\Application\chromedriver.exe'
 
 twitter_login_url = 'https://twitter.com/'
+
+connect_url = 'http://10.10.43.3/drcom/login?callback=dr1575716933962&DDDDD={}&upass={}&0MKKey=123456&R1=0&R3=0&R6=0&para=00&v6ip=&_=1575716904633'.format(
+    '21120341', 'Bjtu@8005')
 
 
 class Xpath():
@@ -382,6 +385,7 @@ if __name__ == '__main__':
         try:
             tweet_urls = get_source_twitter_urls(driver)
         except Exception:
+            requests.get(connect_url)
             continue
 
         for tweet_url in tweet_urls:
@@ -407,6 +411,7 @@ if __name__ == '__main__':
                     os.remove(crawling_path)
             except Exception:
                 print('exception')
+                requests.get(connect_url)
                 if os.path.exists(crawling_path):
                     os.remove(crawling_path)
                 continue
