@@ -58,6 +58,8 @@ class Xpath():
         self.sub_line = './/div[@class="css-1dbjc4n r-1awozwy r-1hwvwag r-18kxxzh r-1b7u577"]/div'  # 表示回复关系的竖线
         self.unfold_thread_button = './/a[@class="css-4rbku5 css-18t94o4 css-1dbjc4n r-1loqt21 r-t2kpel r-1ny4l3l r-1udh08x r-ymttw5 r-1vvnge1 r-o7ynqc r-6416eg"]'  # "Show this thread"按钮
 
+        self.retry_button = '//div[@role="button" and @class="css-18t94o4 css-1dbjc4n r-l5o3uw r-42olwf r-sdzlij r-1phboty r-rs99b7 r-2yi16 r-1qi8awa r-1ny4l3l r-ymttw5 r-o7ynqc r-6416eg r-lrvibr"]'
+
 
 locator = Xpath()
 
@@ -385,7 +387,11 @@ if __name__ == '__main__':
         try:
             tweet_urls = get_source_twitter_urls(driver)
         except Exception:
-            requests.get(connect_url)
+            try:
+                if len(finds(driver, locator.retry_button)) > 0:
+                    requests.get(connect_url)
+            except Exception:
+                pass
             continue
 
         for tweet_url in tweet_urls:
@@ -411,7 +417,11 @@ if __name__ == '__main__':
                     os.remove(crawling_path)
             except Exception:
                 print('exception')
-                requests.get(connect_url)
+                try:
+                    if len(finds(driver, locator.retry_button)) > 0:
+                        requests.get(connect_url)
+                except Exception:
+                    pass
                 if os.path.exists(crawling_path):
                     os.remove(crawling_path)
                 continue
