@@ -76,7 +76,7 @@ def login():
     options = ChromeOptions()
     chrome_options = Options()
     options.add_experimental_option('excludeSwitches', ['enable-automation'])
-    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
+    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9223")
     driver = webdriver.Chrome(driver_path, options=options, chrome_options=chrome_options)
     # driver.maximize_window()
 
