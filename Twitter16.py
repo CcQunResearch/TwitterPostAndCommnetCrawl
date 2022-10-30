@@ -23,14 +23,13 @@ import os
 username = '13698603020@163.com'
 password = '5039795891..'
 
-level_limit = 4  # 评论的深度限制
+level_limit = 10  # 评论的深度限制
 # tweet_num_limit = 50  # 一次提取的帖子url的数量
-reply_num_limit = 400  # 截取的一级评论限制数量
+reply_num_limit = 800  # 截取的一级评论限制数量
 
 driver_path = r'C:\Program Files\Google\Chrome\Application\chromedriver.exe'
 
 twitter_login_url = 'https://twitter.com/'
-
 
 
 class Xpath():
@@ -47,6 +46,7 @@ class Xpath():
         self.tweet_place = '//div[@data-testid="cellInnerDiv"]'
         self.tweet_article = '//article[@data-testid="tweet"]'
         self.source_article = '//article[@data-testid="tweet" and @tabindex="-1"]'
+        self.source_use_id = './/div[@class="css-1dbjc4n r-18u37iz r-1wbh5a2"]'
         self.tweet_url_place = './/div[@class="css-1dbjc4n r-18u37iz r-1q142lx"]/a'  # tweet发布时间的xpath，从这里获取tweet的url
         self.tweet_text = './/div[@data-testid="tweetText"]'
         self.time = './/time'
@@ -72,7 +72,7 @@ def login():
     options = ChromeOptions()
     chrome_options = Options()
     options.add_experimental_option('excludeSwitches', ['enable-automation'])
-    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9224")
+    chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9223")
     driver = webdriver.Chrome(driver_path, options=options, chrome_options=chrome_options)
     # driver.maximize_window()
 
@@ -189,43 +189,43 @@ def get_comment(tweet_article, temp_comment_id, source_uid, source_tid, level):
         return None
 
 
-def get_source_twitter_urls(driver):
-    tweet_urls = set()
-
-    driver.get(twitter_home_url)
-    WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.tweet_place))
-
-    scrolling_location = 0
-    loop_num = 0
-    while 1:
-        if loop_num > 100:
-            break
-        loop_num += 1
-
-        tweet_articles = finds(driver, locator.tweet_article)
-
-        drop_next = False
-        for tweet_article in tweet_articles:
-            if drop_next:
-                if not next_is_sub(tweet_article):
-                    drop_next = False
-                continue
-            if next_is_sub(tweet_article):
-                drop_next = True
-
-            reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
-            reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
-            tweet_urls.add(
-                (tweet_article.find_element_by_xpath(locator.tweet_url_place).get_attribute('href'), reply_num))
-
-        if len(tweet_urls) > 50:
-            break
-
-        scrolling_location += 1200
-        scrolling(driver, scrolling_location)
-        time.sleep(1)
-
-    return tweet_urls
+# def get_source_twitter_urls(driver):
+#     tweet_urls = set()
+#
+#     driver.get(twitter_home_url)
+#     WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.tweet_place))
+#
+#     scrolling_location = 0
+#     loop_num = 0
+#     while 1:
+#         if loop_num > 100:
+#             break
+#         loop_num += 1
+#
+#         tweet_articles = finds(driver, locator.tweet_article)
+#
+#         drop_next = False
+#         for tweet_article in tweet_articles:
+#             if drop_next:
+#                 if not next_is_sub(tweet_article):
+#                     drop_next = False
+#                 continue
+#             if next_is_sub(tweet_article):
+#                 drop_next = True
+#
+#             reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
+#             reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
+#             tweet_urls.add(
+#                 (tweet_article.find_element_by_xpath(locator.tweet_url_place).get_attribute('href'), reply_num))
+#
+#         if len(tweet_urls) > 50:
+#             break
+#
+#         scrolling_location += 1200
+#         scrolling(driver, scrolling_location)
+#         time.sleep(1)
+#
+#     return tweet_urls
 
 
 def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
@@ -240,12 +240,15 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
 
     source_article = find(driver, locator.source_article)
     source_timestr = source_article.find_element_by_xpath(locator.time).get_attribute('datetime')
+    uid = source_article.find_element_by_xpath(locator.source_use_id).get_attribute('innerText')[1:]
+    tweet_url_split = tweet_url.split('/')
+    tweet_url_split[-3] = uid
     source = {
         "content": source_article.find_element_by_xpath(locator.tweet_text).get_attribute('innerText'),
         "time": datetime.strptime(source_timestr, "%Y-%m-%dT%H:%M:%S.%fZ").strftime('%y-%m-%d %H:%M'),
         "timestamp": int(time.mktime(time.strptime(source_timestr, "%Y-%m-%dT%H:%M:%S.%fZ"))),
-        "tweet url": tweet_url,
-        "user id": tweet_url.split('/')[-3],
+        "tweet url": '/'.join(tweet_url_split),
+        "user id": uid,
         "tweet id": tweet_url.split('/')[-1]
     }
 
@@ -338,9 +341,10 @@ def crawl_tweet(driver, tweet_url, reply_num_max, level=1):
         return {"source": source, "comment": comments}
 
 
-def save_standard_json(tweet, filepath):
+def save_standard_json(tweet, label, filepath):
     source = tweet["source"]
     source["theme"] = topic
+    source["label"] = label
     source_tid = source["tweet id"]
     comments = tweet["comment"]
     tid_2_index = {}
@@ -374,40 +378,42 @@ def save_standard_json(tweet, filepath):
 if __name__ == '__main__':
     driver = login()
 
-    data_dir = 'Data'
-    topic = 'Covid'
-    twitter_home_url = 'https://twitter.com/search?q=Covid&src=trend_click&vertical=trends'
+    data_dir = 'Twitter16'
+    topic = 'No theme'
 
-    filenames = json.load(open('filenames.json', 'r', encoding='utf-8'))
-    while 1:
+    label_dict = {
+        'true': 0,
+        'false': 1,
+        'unverified': 2,
+        'non-rumor': 3
+    }
+
+    labels = []
+    tweet_urls = []
+    label_file = r'D:\Project\Research\TwitterPostAndCommnetCrawl\rumor_detection_acl2017\twitter16\label.txt'
+    f = open(label_file, "r", encoding='UTF-8')
+    lines = f.readlines()
+    for line in lines:
+        line = line.strip()
+        label, tweet_id = line.split(':')[0], line.split(':')[1]
+        labels.append(label_dict[label])
+        tweet_urls.append('https://twitter.com/user/status/' + tweet_id)
+
+    # print(tweet_urls)
+    # print(len(tweet_urls))
+
+    for i, tweet_url in enumerate(tweet_urls):
         try:
-            tweet_urls = get_source_twitter_urls(driver)
-        except Exception:
-            continue
-
-        for tweet_url in tweet_urls:
-            try:
-                if tweet_url[1] > 10:
-                    print(tweet_url)
-                    tidjson = tweet_url[0].split('/')[-1] + '.json'
-                    if os.path.exists(os.path.join(data_dir, tidjson)) or tidjson in filenames:
-                        print('pass')
-                        continue
-
-                    crawling_path = os.path.join('Crawling', tidjson)
-                    if os.path.exists(crawling_path):
-                        print('repetition')
-                        continue
-                    write_tweet({}, crawling_path)
-
-                    tweet = crawl_tweet(driver, tweet_url[0], tweet_url[1])
-                    if len(tweet["comment"]) > 10:
-                        save_standard_json(tweet, os.path.join(data_dir, f'{tweet["source"]["tweet id"]}.json'))
-                        print(f'{tweet["source"]["tweet id"]}.json')
-
-                    os.remove(crawling_path)
-            except Exception:
-                print('exception')
-                if os.path.exists(crawling_path):
-                    os.remove(crawling_path)
+            # tweet_url = 'https://twitter.com/WHO/status/752965545528528898'
+            print(tweet_url)
+            tidjson = tweet_url.split('/')[-1] + '.json'
+            if os.path.exists(os.path.join(data_dir, tidjson)):
+                print('pass')
                 continue
+
+            tweet = crawl_tweet(driver, tweet_url, 800)
+            save_standard_json(tweet, labels[i], os.path.join(data_dir, f'{tweet["source"]["tweet id"]}.json'))
+            print(f'{tweet["source"]["tweet id"]}.json')
+        except Exception:
+            print('exception')
+            continue
