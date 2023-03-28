@@ -97,7 +97,7 @@ def login():
     # goto_password_button = find(driver, locator.goto_password_button)
     # driver.execute_script("arguments[0].click();", goto_password_button)
     #
-    # WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.password_input))
+    # WebDriverWait(driver, 20).until(lambda driver: finds(driver, locator.password_input) )
     # password_input = find(driver, locator.password_input)
     # password_input.send_keys(password)
     # print("成功输入密码")
@@ -167,7 +167,7 @@ def get_comment(tweet_article, temp_comment_id, source_uid, source_tid, level):
     reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
     reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
     tweet_texts = tweet_article.find_elements_by_xpath(locator.tweet_text)
-    if len(parent_user_ids) > 0 and parent_user_ids[0].get_attribute(
+    if len(parent_user_ids) > 0 and parent_user_ids[1].get_attribute(
             'innerText') == f'@{source_uid}' and len(tweet_texts) > 0:
         content = tweet_article.find_element_by_xpath(locator.tweet_text).get_attribute('innerText')
         if len(content) > 0:
@@ -387,11 +387,11 @@ if __name__ == '__main__':
         try:
             tweet_urls = get_source_twitter_urls(driver)
         except Exception:
-            try:
-                if len(finds(driver, locator.retry_button)) > 0:
-                    requests.get(connect_url)
-            except Exception:
-                pass
+            # try:
+            #     if len(finds(driver, locator.retry_button)) > 0:
+            #         requests.get(connect_url)
+            # except Exception:
+            #     pass
             continue
 
         for tweet_url in tweet_urls:
@@ -417,11 +417,11 @@ if __name__ == '__main__':
                     os.remove(crawling_path)
             except Exception:
                 print('exception')
-                try:
-                    if len(finds(driver, locator.retry_button)) > 0:
-                        requests.get(connect_url)
-                except Exception:
-                    pass
+                # try:
+                #     if len(finds(driver, locator.retry_button)) > 0:
+                #         requests.get(connect_url)
+                # except Exception:
+                #     pass
                 if os.path.exists(crawling_path):
                     os.remove(crawling_path)
                 continue
