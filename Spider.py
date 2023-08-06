@@ -20,8 +20,8 @@ from datetime import datetime
 import re
 import os
 
-username = '13698603020@163.com'
-password = '5039795891..'
+username = ''
+password = ''
 
 level_limit = 12  # 评论的深度限制
 # tweet_num_limit = 50  # 一次提取的帖子url的数量
