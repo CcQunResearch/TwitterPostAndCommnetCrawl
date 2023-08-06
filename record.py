@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2022/10/13 16:05
-# @Author  : CcQun
-# @Email   : 13698603020@163.com
+# @Time    :
+# @Author  :
+# @Email   :
 # @File    : record.py
 # @Software: PyCharm
 # @Note    :

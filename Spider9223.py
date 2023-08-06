@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2022/10/10 11:31
-# @Author  : CcQun
-# @Email   : 13698603020@163.com
+# @Time    :
+# @Author  :
+# @Email   :
 # @File    : Spider.py
 # @Software: PyCharm
 # @Note    :
@@ -23,7 +23,7 @@ import os
 username = '13698603020@163.com'
 password = '5039795891..'
 
-level_limit = 4  # 评论的深度限制
+level_limit = 12  # 评论的深度限制
 # tweet_num_limit = 50  # 一次提取的帖子url的数量
 reply_num_limit = 400  # 截取的一级评论限制数量
 
@@ -54,6 +54,8 @@ class Xpath():
         self.time = './/time'
         self.parent_user_id = './/a[@dir="ltr"]'  # 匹配所回复的用户id，也有可能匹配带#的话题超链接
         self.reply_num = './/div[@data-testid="reply"]//span[@data-testid="app-text-transition-container"]'
+
+        self.not_direct_recognizer = './/div[@class="css-1dbjc4n r-1hwvwag r-18kxxzh r-15zivkp r-1b7u577"]'
 
         self.sub_line = './/div[@class="css-1dbjc4n r-1awozwy r-1hwvwag r-18kxxzh r-1b7u577"]/div'  # 表示回复关系的竖线
         self.unfold_thread_button = './/a[@class="css-4rbku5 css-18t94o4 css-1dbjc4n r-1loqt21 r-t2kpel r-1ny4l3l r-1udh08x r-ymttw5 r-1vvnge1 r-o7ynqc r-6416eg"]'  # "Show this thread"按钮
@@ -163,12 +165,16 @@ def get_article_url(tweet_article):
 
 
 def get_comment(tweet_article, temp_comment_id, source_uid, source_tid, level):
-    parent_user_ids = tweet_article.find_elements_by_xpath(locator.parent_user_id)
+    # parent_user_ids = tweet_article.find_elements_by_xpath(locator.parent_user_id)
+
+    not_direct = tweet_article.find_elements_by_xpath(locator.not_direct_recognizer)
+
     reply_num_str = tweet_article.find_element_by_xpath(locator.reply_num).get_attribute('innerText')
     reply_num = int(reply_num_str.replace(",", "")) if len(reply_num_str) > 0 else 0
     tweet_texts = tweet_article.find_elements_by_xpath(locator.tweet_text)
-    if len(parent_user_ids) > 0 and parent_user_ids[1].get_attribute(
-            'innerText') == f'@{source_uid}' and len(tweet_texts) > 0:
+    # if len(parent_user_ids) > 0 and parent_user_ids[1].get_attribute(
+    #         'innerText') == f'@{source_uid}' and len(tweet_texts) > 0:
+    if len(not_direct) == 0 and len(tweet_texts) > 0:
         content = tweet_article.find_element_by_xpath(locator.tweet_text).get_attribute('innerText')
         if len(content) > 0:
             comment_timestr = tweet_article.find_element_by_xpath(locator.time).get_attribute('datetime')
